@@ -1,0 +1,98 @@
+
+-- Importing a file such as this will let you quickly create a demo to hand
+-- in. You may edit this to customize it.  For instance, you may have your
+-- data in a csv file and need a different command to load it in, you
+-- may differently named files, or you may have your queries split into more
+-- files than expected here.
+--
+\echo -------------------- Loading schema and data: -------------------- 
+\echo
+\i schema.ddl
+\echo
+\COPY Neighborhood from neighborhood.csv with csv
+\echo
+\COPY Shelter from Shelter.csv with csv
+\echo
+\COPY Cases from cases.csv with csv
+\echo
+\COPY Occupancy from occupancy.csv (DELIMITER(','))
+\echo
+\echo  -------------------- Investigative Question 1: ------------------ 
+\echo
+DROP VIEW IF EXISTS regions CASCADE;
+\echo
+CREATE VIEW regions AS 
+	SELECT FSA, count(*) AS caseTotal 
+	FROM Cases 
+	GROUP BY FSA;
+\echo
+SELECT FSA, name, caseTotal 
+	FROM regions NATURAL JOIN Neighborhood 
+	ORDER BY caseTotal DESC 
+	limit 5;
+\echo
+SELECT agegroup, count(*) 
+	FROM Cases 
+	GROUP BY agegroup
+	ORDER BY agegroup;
+\echo
+SELECT agegroup, count(*) 
+	FROM Cases 
+	WHERE hospitalized = True 
+	GROUP BY agegroup
+	ORDER BY agegroup;
+\echo
+\echo  -------------------- Investigative Question 2: ------------------ 
+\echo
+CREATE VIEW dates as 
+	SELECT date 
+	FROM occupancy 
+	GROUP BY date;
+\echo
+SELECT date, sum(occupancy) AS shelter_occupancy 
+	FROM occupancy 
+	GROUP BY date
+	ORDER BY shelter_occupancy DESC
+	limit 10 OFFSET 73;
+\echo
+SELECT date, cases FROM dates NATURAL LEFT JOIN 
+	(SELECT date, count(caseID) as cases FROM cases GROUP BY date) AS casebyday 
+	ORDER BY date
+	limit 10 OFFSET 73;
+\echo The data above is only informitave when viewed as a graph
+\echo
+DROP VIEW IF EXISTS regions CASCADE;
+\echo
+CREATE VIEW regions AS 
+	SELECT FSA, count(*) AS caseTotal 
+	FROM Cases 
+	GROUP BY FSA;
+\echo
+SELECT FSA, count(*) AS shelter_count 
+	FROM Shelter 
+	GROUP BY FSA 
+	ORDER BY shelter_count DESC
+	limit 5;
+\echo
+\echo  -------------------- Investigative Question 3: ------------------
+\echo
+DROP VIEW IF EXISTS regions CASCADE;
+\echo
+DROP VIEW IF EXISTS capByFsa CASCADE;
+\echo
+CREATE VIEW regions AS 
+	SELECT FSA, count(*) AS caseTotal 
+	FROM Cases 
+	GROUP BY FSA;
+\echo
+CREATE VIEW capByFsa AS 
+	SELECT FSA, sum(capacity) AS shelter_count 
+	FROM Shelter 
+	GROUP BY FSA 
+	ORDER BY shelter_count DESC;
+\echo
+SELECT FSA, shelter_count, caseTotal 
+	FROM capByFsa NATURAL LEFT JOIN regions 
+	ORDER BY shelter_count DESC
+	limit 5;
+
