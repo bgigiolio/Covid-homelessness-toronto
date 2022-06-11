@@ -1,0 +1,163 @@
+Part a:
+
+=> \i schema.ddl
+psql:schema.ddl:1: NOTICE:  drop cascades to 8 other objects
+DETAIL:  drop cascades to type fsa
+drop cascades to type ldu
+drop cascades to type outcome
+drop cascades to type source
+drop cascades to table neighborhood
+drop cascades to table shelter
+drop cascades to table cases
+drop cascades to table occupancy
+DROP SCHEMA
+CREATE SCHEMA
+SET
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+
+=> \copy Neighborhood from neighborhood.csv with csv
+COPY 97
+
+=> \copy Cases from cases.csv with csv
+COPY 67053
+
+=> \copy Shelter from Shelter.csv with csv
+COPY 111
+
+=> \COPY Occupancy from occupancy.csv (DELIMITER(','))
+COPY 37549
+
+___________________________________________________________________________________
+Part b:
+
+=> \d Neighborhood
+    Table "covidshelterschema.neighborhood"
+ Column | Type | Collation | Nullable | Default
+--------+------+-----------+----------+---------
+ fsa    | fsa  |           | not null |
+ name   | text |           |          |
+Indexes:
+    "neighborhood_pkey" PRIMARY KEY, btree (fsa)
+Referenced by:
+    TABLE "cases" CONSTRAINT "cases_fsa_fkey" FOREIGN KEY (fsa) REFERENCES neighborhood(fsa)
+    TABLE "shelter" CONSTRAINT "shelter_fsa_fkey" FOREIGN KEY (fsa) REFERENCES neighborhood(fsa)
+
+=> \d Cases
+               Table "covidshelterschema.cases"
+      Column       |  Type   | Collation | Nullable | Default
+-------------------+---------+-----------+----------+---------
+ caseid            | integer |           | not null |
+ fsa               | fsa     |           |          |
+ casesetting       | text    |           | not null |
+ agegroup          | text    |           |          |
+ sourceofinfection | source  |           |          |
+ date              | date    |           | not null |
+ gender            | text    |           |          |
+ outcome           | outcome |           | not null |
+ hospitalized      | boolean |           | not null |
+ icu               | boolean |           | not null |
+ intubated         | boolean |           | not null |
+Indexes:
+    "cases_pkey" PRIMARY KEY, btree (caseid)
+Foreign-key constraints:
+    "cases_fsa_fkey" FOREIGN KEY (fsa) REFERENCES neighborhood(fsa)
+
+=> \d Shelter
+             Table "covidshelterschema.shelter"
+      Column      |  Type   | Collation | Nullable | Default
+------------------+---------+-----------+----------+---------
+ facilityname     | text    |           | not null |
+ programname      | text    |           | not null |
+ organizationname | text    |           | not null |
+ sheltername      | text    |           | not null |
+ fsa              | fsa     |           | not null |
+ capacity         | integer |           | not null |
+Indexes:
+    "shelter_pkey" PRIMARY KEY, btree (facilityname, programname)
+Foreign-key constraints:
+    "shelter_fsa_fkey" FOREIGN KEY (fsa) REFERENCES neighborhood(fsa)
+Referenced by:
+    TABLE "occupancy" CONSTRAINT "occupancy_facilityname_fkey" FOREIGN KEY (facilityname, programname) REFERENCES shelter(facilityname, programname)
+
+=> \d Occupancy
+          Table "covidshelterschema.occupancy"
+    Column    |  Type   | Collation | Nullable | Default
+--------------+---------+-----------+----------+---------
+ facilityname | text    |           | not null |
+ programname  | text    |           | not null |
+ date         | date    |           | not null |
+ occupancy    | integer |           | not null |
+Indexes:
+    "occupancy_pkey" PRIMARY KEY, btree (facilityname, programname, date)
+Foreign-key constraints:
+    "occupancy_facilityname_fkey" FOREIGN KEY (facilityname, programname) REFERENCES shelter(facilityname, programname)
+
+___________________________________________________________________________________
+Part c:
+
+=> SELECT count(*) FROM Neighborhood;
+ count
+-------
+    97
+(1 row)
+
+=> SELECT count(*) FROM Cases;
+ count
+-------
+ 67053
+(1 row)
+
+=> SELECT count(*) FROM Shelter;
+ count
+-------
+   111
+(1 row)
+
+=> SELECT count(*) FROM Occupancy;
+ count
+-------
+ 37549
+(1 row)
+
+________________________________________________________________________________
+Part d:
+
+=> SELECT * FROM Neighborhood WHERE name = 'Church-Yonge Corridor';
+ fsa |         name
+-----+-----------------------
+ M4W | Church-Yonge Corridor
+ M4Y | Church-Yonge Corridor
+ M5C | Church-Yonge Corridor
+(3 rows)
+
+=> SELECT * FROM Cases WHERE date = '2020-02-20';
+ caseid | fsa | casesetting |    agegroup    | sourceofinfection |    date    | gender | outcome  | hospitalized | icu | intubated
+--------+-----+-------------+----------------+-------------------+------------+--------+----------+--------------+-----+-----------
+      5 | M4W | CONFIRMED   | 60 to 69 Years | Travel            | 2020-02-20 | MALE   | RESOLVED | f            | f   | f
+      7 | M1V | CONFIRMED   | 80 to 89 Years | Travel            | 2020-02-20 | MALE   | RESOLVED | f            | f   | f
+(2 rows)
+
+=> SELECT * FROM Shelter WHERE shelterName = 'Family Residence';
+           facilityname           |                      programname                      | organizationname |   sheltername    | fsa | capacity
+----------------------------------+-------------------------------------------------------+------------------+------------------+-----+----------
+ Family Residence - LI Site       | Family Residence - LI Site (Internal Referral Only)   | City of Toronto  | Family Residence | M1E |      252
+ Family Residence - MA Site       | Family Residence - MA Site (Internal Referral Only)   | City of Toronto  | Family Residence | M1E |       48
+ Family Residence - Main Building | Family Residence - Main                               | City of Toronto  | Family Residence | M1E |      110
+ Family Residence - Roycroft Site | Family Residence - Roycroft Site                      | City of Toronto  | Family Residence | M1E |       50
+ Family Residence - New Plaza     | Family Residence - New Plaza (Internal Referral Only) | City of Toronto  | Family Residence | M1E |      120
+ Family Residence - Edward Villag | Family Residence - Edward Village Hotel               | City of Toronto  | Family Residence | M1E |      200
+ Family Residence - Edward  Co-Ed | Edward Village Singles Program                        | City of Toronto  | Family Residence | M1E |       60
+(7 rows)
+
+=> SELECT * FROM Occupancy WHERE facilityName = 'Turning Point Youth Services' AND date = '2020-11-20';
+         facilityname         |             programname              |    date    | occupancy
+------------------------------+--------------------------------------+------------+-----------
+ Turning Point Youth Services | Turning Point Youth Services Shelter | 2020-11-20 |        11
+(1 row)

@@ -1,0 +1,147 @@
+-------------------- Loading schema and data: --------------------
+
+psql:schema.ddl:1: NOTICE:  drop cascades to 11 other objects
+DETAIL:  drop cascades to type fsa
+drop cascades to type ldu
+drop cascades to type outcome
+drop cascades to type source
+drop cascades to table neighborhood
+drop cascades to table shelter
+drop cascades to table cases
+drop cascades to table occupancy
+drop cascades to view dates
+drop cascades to view regions
+drop cascades to view capbyfsa
+DROP SCHEMA
+CREATE SCHEMA
+SET
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+
+COPY 97
+
+COPY 111
+
+COPY 67053
+
+COPY 37549
+
+-------------------- Investigative Question 1: ------------------
+
+psql:queries-runner.txt:22: NOTICE:  view "regions" does not exist, skipping
+DROP VIEW
+CREATE VIEW
+SELECT FSA, name, caseTotal FROM regions NATURAL JOIN Neighborhood ORDER BY caseTotal DESC limit 5;
+ fsa |             name             | casetotal
+-----+------------------------------+-----------
+ M9V | Thistletown-Beaumond Heights |      3432
+ M3N | Glenfield-Jane Heights       |      2398
+ M1B | Malvern                      |      2375
+ M9W | West Humber-Clairville       |      1709
+ M6M | Mount Dennis                 |      1655
+(5 rows)
+
+SELECT agegroup, count(*) FROM Cases GROUP BY agegroup ORDER BY agegroup;
+    agegroup    | count
+----------------+-------
+ 19 and younger |  8093
+ 20 to 29 Years | 13317
+ 30 to 39 Years | 11092
+ 40 to 49 Years |  9487
+ 50 to 59 Years |  9882
+ 60 to 69 Years |  6326
+ 70 to 79 Years |  3312
+ 80 to 89 Years |  3329
+ 90 and older   |  2172
+                |    43
+(10 rows)
+
+SELECT agegroup, count(*) FROM Cases WHERE hospitalized = True GROUP BY agegroup ORDER BY agegroup;
+    agegroup    | count
+----------------+-------
+ 19 and younger |    56
+ 20 to 29 Years |   120
+ 30 to 39 Years |   192
+ 40 to 49 Years |   317
+ 50 to 59 Years |   576
+ 60 to 69 Years |   828
+ 70 to 79 Years |   881
+ 80 to 89 Years |  1020
+ 90 and older   |   517
+(9 rows)
+
+
+-------------------- Investigative Question 2: ------------------
+
+CREATE VIEW
+SELECT date, sum(occupancy) AS shelter_occupancy FROM occupancy GROUP BY date ORDER BY date limit 10 OFFSET 73;
+    date    | shelter_occupancy
+------------+-------------------
+ 2020-03-14 |              6144
+ 2020-03-15 |              6122
+ 2020-03-16 |              6120
+ 2020-03-17 |              6130
+ 2020-03-18 |              6115
+ 2020-03-19 |              6132
+ 2020-03-20 |              6119
+ 2020-03-21 |              6125
+ 2020-03-22 |              6135
+ 2020-03-23 |              6117
+(10 rows)
+
+SELECT date, cases FROM dates NATURAL LEFT JOIN (SELECT date, count(caseID) as cases FROM cases GROUP BY date) AS casebyday ORDER BY date limit 10 OFFSET 73;
+    date    | cases
+------------+-------
+ 2020-03-14 |    63
+ 2020-03-15 |    57
+ 2020-03-16 |    81
+ 2020-03-17 |   102
+ 2020-03-18 |    90
+ 2020-03-19 |    79
+ 2020-03-20 |    88
+ 2020-03-21 |    74
+ 2020-03-22 |    60
+ 2020-03-23 |   107
+(10 rows)
+
+The data above is much more informitave when viewed as a graph
+
+DROP VIEW
+
+CREATE VIEW
+SELECT FSA, count(*) AS shelter_count FROM Shelter GROUP BY FSA ORDER BY shelter_count DESC limit 5;
+ fsa | shelter_count
+-----+---------------
+ M5A |            24
+ M5S |            10
+ M5V |             9
+ M1E |             7
+ M5T |             5
+(5 rows)
+
+
+-------------------- Investigative Question 3: ------------------
+
+DROP VIEW
+
+psql:queries-runner.txt:85: NOTICE:  view "capbyfsa" does not exist, skipping
+DROP VIEW
+
+CREATE VIEW
+
+CREATE VIEW
+SELECT FSA, shelter_count, caseTotal FROM capByFsa NATURAL LEFT JOIN regions ORDER BY shelter_count DESC limit 5;
+ fsa | shelter_count | casetotal
+-----+---------------+-----------
+ M5A |          1670 |       908
+ M5S |          1578 |       188
+ M1E |           840 |      1379
+ M1P |           366 |      1574
+ M5V |           357 |       760
+(5 rows)
